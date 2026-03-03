@@ -2,234 +2,216 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Mi Tienda</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sophie Store</title>
 
 <style>
 body{
-font-family: Arial;
-background:#f4f6f9;
-margin:0;
-padding:20px;
+  font-family: Arial;
+  margin:0;
+  background:#f5f5f5;
 }
 
-h1{
-text-align:center;
+header{
+  background:black;
+  color:white;
+  padding:15px;
+  text-align:center;
+  font-size:22px;
 }
 
-.filtros{
-display:flex;
-gap:10px;
-margin-bottom:20px;
-flex-wrap:wrap;
+.controles{
+  padding:10px;
+  text-align:center;
 }
 
 input, select{
-padding:8px;
-border-radius:5px;
-border:1px solid #ccc;
+  padding:8px;
+  margin:5px;
+  width:200px;
+  max-width:90%;
 }
 
-.productos{
-display:grid;
-grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
-gap:20px;
+#productos{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+  gap:15px;
+  padding:15px;
 }
 
-.card{
-background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 4px 10px rgba(0,0,0,0.1);
-text-align:center;
+.producto{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
+  box-shadow:0 0 5px rgba(0,0,0,0.1);
 }
 
-.card img{
-width:100%;
-height:180px;
-object-fit:cover;
-border-radius:8px;
+.producto img{
+  width:100%;
+  height:150px;
+  object-fit:cover;
+  border-radius:8px;
 }
 
 button{
-background:#25D366;
-color:white;
-border:none;
-padding:10px;
-border-radius:5px;
-cursor:pointer;
-margin-top:10px;
-width:100%;
+  padding:12px 20px;
+  background:#25D366;
+  color:white;
+  border:none;
+  border-radius:8px;
+  font-size:16px;
+  margin:15px;
 }
 
-button:hover{
-background:#1ebe5d;
-}
-
-.total{
-margin-top:30px;
-font-size:20px;
-text-align:right;
-font-weight:bold;
+#total{
+  text-align:center;
+  font-size:20px;
+  margin:10px;
+  font-weight:bold;
 }
 </style>
 </head>
 
 <body>
 
-<h1>Mi Tienda Online</h1>
+<header>SOPHIE STORE</header>
 
-<div class="filtros">
-<input type="text" id="buscador" placeholder="Buscar producto..." onkeyup="filtrar()">
-<select id="filtroMarca" onchange="filtrar()">
-<option value="">Todas las marcas</option>
-</select>
+<div class="controles">
+  <input type="text" id="buscador" placeholder="Buscar producto..." onkeyup="filtrar()">
+  <select id="filtroMarca" onchange="filtrar()">
+    <option value="">Todas las marcas</option>
+  </select>
 </div>
 
-<div id="productos" class="productos"></div>
+<div id="productos"></div>
 
-<div class="total">
-Total: S/ <span id="total">0.00</span>
-<br><br>
-<button onclick="enviarPedido()">Enviar Pedido por WhatsApp</button>
-</div>
+<div id="total">Total: S/. 0.00</div>
+
+<center>
+<button onclick="enviarPedido()">Enviar por WhatsApp</button>
+</center>
 
 <script>
 
-const whatsapp = "51992044102";
-const csvURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8uMFvOEq09EXVbg6YxPa1lhGndcrwD-ELRkxRQVsiG4Tjb646vPzGPcuHP4CD_EZ-F7da5BonXwt3/pub?output=csv";
+let urlCSV = "TU_LINK_CSV_AQUI"; // PEGA TU LINK CSV AQUÍ
 
-let carrito = {};
-let total = 0;
-let productosData = [];
+let productos = [];
+let carrito = [];
 
-fetch(csvURL)
+fetch(urlCSV)
 .then(res => res.text())
 .then(data => {
 
-const filas = data.trim().split("\n");
-filas.shift();
+  let filas = data.split("\n").slice(1);
+  let marcas = [];
 
-const marcasUnicas = new Set();
+  filas.forEach((fila,index) => {
 
-filas.forEach((fila,index)=>{
+    let columnas = fila.split(",");
 
-const columnas = fila.split(",");
-if(columnas.length < 6) return;
+    if(columnas.length >= 6){
 
-const producto = {
-nombre: columnas[0],
-marca: columnas[1],
-precioUnidad: parseFloat(columnas[2]),
-precioMayor: parseFloat(columnas[3]),
-minMayor: parseInt(columnas[4]),
-imagen: columnas[5],
-id: index
-};
+      let producto = {
+        nombre: columnas[0],
+        marca: columnas[1],
+        precioUnidad: parseFloat(columnas[2]),
+        precioMayor: parseFloat(columnas[3]),
+        minMayor: parseInt(columnas[4]),
+        imagen: columnas[5]
+      };
 
-productosData.push(producto);
-marcasUnicas.add(producto.marca);
+      productos.push(producto);
 
+      if(!marcas.includes(producto.marca)){
+        marcas.push(producto.marca);
+        document.getElementById("filtroMarca").innerHTML += 
+        `<option value="${producto.marca}">${producto.marca}</option>`;
+      }
+
+      document.getElementById("productos").innerHTML += `
+        <div class="producto" data-nombre="${producto.nombre.toLowerCase()}" data-marca="${producto.marca}">
+          <img src="${producto.imagen}">
+          <h4>${producto.nombre}</h4>
+          <p>Marca: ${producto.marca}</p>
+          <p>Unidad: S/. ${producto.precioUnidad.toFixed(2)}</p>
+          <p>Mayor desde ${producto.minMayor}: S/. ${producto.precioMayor.toFixed(2)}</p>
+          <input type="number" min="0" value="0" onchange="calcular(${index},this.value)">
+        </div>
+      `;
+    }
+  });
+
+})
+.catch(() => {
+  alert("Error cargando productos. Verifica tu CSV.");
 });
-
-cargarMarcas(marcasUnicas);
-mostrarProductos(productosData);
-
-});
-
-function cargarMarcas(marcas){
-const select = document.getElementById("filtroMarca");
-marcas.forEach(marca=>{
-const option = document.createElement("option");
-option.value = marca;
-option.textContent = marca;
-select.appendChild(option);
-});
-}
-
-function mostrarProductos(lista){
-
-const contenedor = document.getElementById("productos");
-contenedor.innerHTML = "";
-
-lista.forEach(producto=>{
-
-const idCantidad = "cantidad_"+producto.id;
-
-const card = document.createElement("div");
-card.className="card";
-
-card.innerHTML = `
-<img src="${producto.imagen}">
-<h3>${producto.nombre}</h3>
-<p><b>Marca:</b> ${producto.marca}</p>
-<p>Unidad: S/ ${producto.precioUnidad}</p>
-<p>Mayor desde ${producto.minMayor}: S/ ${producto.precioMayor}</p>
-<input type="number" min="0" value="0" id="${idCantidad}">
-<button onclick="agregarProducto('${idCantidad}','${producto.nombre}',${producto.precioUnidad},${producto.precioMayor},${producto.minMayor})">
-Agregar
-</button>
-`;
-
-contenedor.appendChild(card);
-
-});
-
-}
 
 function filtrar(){
+  let texto = document.getElementById("buscador").value.toLowerCase();
+  let marca = document.getElementById("filtroMarca").value;
+  let productosDiv = document.querySelectorAll(".producto");
 
-const texto = document.getElementById("buscador").value.toLowerCase();
-const marcaSeleccionada = document.getElementById("filtroMarca").value;
+  productosDiv.forEach(p=>{
+    let nombre = p.dataset.nombre;
+    let marcaProd = p.dataset.marca;
 
-const filtrados = productosData.filter(p=>{
+    let coincideNombre = nombre.includes(texto);
+    let coincideMarca = marca=="" || marcaProd==marca;
 
-const coincideNombre = p.nombre.toLowerCase().includes(texto);
-const coincideMarca = marcaSeleccionada === "" || p.marca === marcaSeleccionada;
-
-return coincideNombre && coincideMarca;
-
-});
-
-mostrarProductos(filtrados);
+    p.style.display = (coincideNombre && coincideMarca) ? "block" : "none";
+  });
 }
 
-function agregarProducto(id,nombre,precioU,precioM,minM){
+function calcular(index,cantidad){
 
-const cantidad = parseInt(document.getElementById(id).value);
-if(!cantidad || cantidad<=0) return;
+  cantidad = parseInt(cantidad);
+  if(!cantidad) cantidad = 0;
 
-let precioFinal = cantidad >= minM ? precioM : precioU;
-let subtotal = cantidad * precioFinal;
+  let producto = productos[index];
 
-carrito[nombre] = {cantidad, subtotal};
+  let precio = cantidad >= producto.minMayor 
+               ? producto.precioMayor 
+               : producto.precioUnidad;
 
-calcularTotal();
+  let subtotal = cantidad * precio;
+
+  carrito[index] = {
+    nombre: producto.nombre,
+    cantidad: cantidad,
+    subtotal: subtotal
+  };
+
+  actualizarTotal();
 }
 
-function calcularTotal(){
-total = 0;
-for(let item in carrito){
-total += carrito[item].subtotal;
-}
-document.getElementById("total").innerText = total.toFixed(2);
+function actualizarTotal(){
+
+  let total = 0;
+
+  carrito.forEach(p=>{
+    if(p) total += p.subtotal;
+  });
+
+  document.getElementById("total").innerHTML =
+  "Total: S/. " + total.toFixed(2);
 }
 
 function enviarPedido(){
 
-if(Object.keys(carrito).length===0){
-alert("No hay productos en el pedido");
-return;
-}
+  let mensaje = "Hola, quiero pedir:%0A";
 
-let mensaje="Hola, quiero pedir:%0A";
+  carrito.forEach(p=>{
+    if(p && p.cantidad > 0){
+      mensaje += `- ${p.nombre} x${p.cantidad} = S/. ${p.subtotal.toFixed(2)}%0A`;
+    }
+  });
 
-for(let item in carrito){
-mensaje += `- ${item} x${carrito[item].cantidad} = S/ ${carrito[item].subtotal}%0A`;
-}
+  let totalFinal = document.getElementById("total").innerText.replace("Total: S/. ","");
 
-mensaje += `%0ATotal: S/ ${total.toFixed(2)}`;
+  mensaje += `%0ATotal: S/. ${parseFloat(totalFinal).toFixed(2)}`;
 
-window.open(`https://wa.me/${whatsapp}?text=${mensaje}`);
+  window.open("https://wa.me/51992044102?text=" + mensaje);
 }
 
 </script>
