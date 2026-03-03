@@ -2,159 +2,156 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Tienda Escolar Profesional</title>
-
+<title>Tienda Online</title>
 <style>
-body{font-family:Arial;background:#f2f2f2;padding:20px}
-h1{text-align:center;}
-.producto{
-    background:white;
-    padding:15px;
-    margin-bottom:15px;
-    border-radius:10px;
-    display:flex;
-    gap:15px;
-    align-items:center;
+body{
+font-family: Arial;
+background:#f4f6f9;
+margin:0;
+padding:20px;
 }
-.producto img{
-    width:90px;
-    height:90px;
-    object-fit:cover;
-    border-radius:8px;
+
+h1{
+text-align:center;
 }
+
+.productos{
+display:grid;
+grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+gap:20px;
+}
+
+.card{
+background:white;
+padding:15px;
+border-radius:10px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.card img{
+width:100%;
+height:180px;
+object-fit:cover;
+border-radius:8px;
+}
+
 button{
-    background:#25D366;
-    color:white;
-    padding:12px;
-    border:none;
-    border-radius:6px;
-    cursor:pointer;
-    font-size:16px;
+background:#25D366;
+color:white;
+border:none;
+padding:10px;
+border-radius:5px;
+cursor:pointer;
+margin-top:10px;
+width:100%;
 }
-input[type="number"]{
-    width:60px;
+
+button:hover{
+background:#1ebe5d;
 }
-.total-box{
-    background:white;
-    padding:15px;
-    border-radius:10px;
-    text-align:center;
-    font-size:20px;
-    margin-top:20px;
+
+input{
+width:60px;
+text-align:center;
+}
+.total{
+margin-top:20px;
+font-size:18px;
+text-align:right;
 }
 </style>
 </head>
-
 <body>
 
-<h1>Tienda Escolar</h1>
+<h1>Mi Tienda</h1>
 
-<label>Nombre:</label><br>
-<input type="text" id="nombre"><br><br>
+<div id="productos" class="productos"></div>
 
-<label>Teléfono:</label><br>
-<input type="text" id="telefono"><br><br>
-
-<div id="listaProductos"></div>
-
-<div class="total-box">
-Total: S/ <span id="total">0.00</span><br><br>
-<button onclick="enviar()">Enviar Pedido por WhatsApp</button>
+<div class="total">
+Total: S/ <span id="total">0</span>
+<br><br>
+<button onclick="enviarPedido()">Enviar Pedido por WhatsApp</button>
 </div>
 
 <script>
 
-// 👇 Aquí va tu enlace CSV (tal como lo proporcionaste)
-const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8uMFvOEq09EXVbg6YxPa1lhGndcrwD-ELRkxRQVsiG4Tjb646vPzGPcuHP4CD_EZ-F7da5BonXwt3/pub?output=csv";
+const whatsapp = "51992044102"; // TU NUMERO
 
-let productos = [];
+const csvURL = "PEGA_AQUI_TU_LINK_CSV";
 
-fetch(url)
-.then(response => response.text())
+let carrito = [];
+let total = 0;
+
+fetch(csvURL)
+.then(res => res.text())
 .then(data => {
-    const filas = data.trim().split("\n");
-    
-    // saltar encabezado
-    for(let i = 1; i < filas.length; i++){
-        const columnas = filas[i].split(",");
+const filas = data.split("\n").slice(1);
 
-        if(columnas.length >= 5){
-            productos.push({
-                nombre: columnas[0],
-                unidad: parseFloat(columnas[1]) || 0,
-                mayor: parseFloat(columnas[2]) || 0,
-                minMayor: parseInt(columnas[3]) || 0,
-                imagen: columnas[4]
-            });
-        }
-    }
+filas.forEach(fila=>{
+if(!fila) return;
 
-    cargarProductos();
-})
-.catch(error => {
-    alert("Error cargando productos. Asegúrate de que el enlace CSV esté publicado.");
-    console.log(error);
+const columnas = fila.split(",");
+
+const nombre = columnas[0];
+const marca = columnas[1];
+const precioUnidad = parseFloat(columnas[2]);
+const precioMayor = parseFloat(columnas[3]);
+const minMayor = parseInt(columnas[4]);
+const imagen = columnas[5];
+
+const contenedor = document.getElementById("productos");
+
+const card = document.createElement("div");
+card.className="card";
+
+card.innerHTML=`
+<img src="${imagen}" alt="">
+<h3>${nombre}</h3>
+<p><b>Marca:</b> ${marca}</p>
+<p>Unidad: S/ ${precioUnidad}</p>
+<p>Mayor (desde ${minMayor}): S/ ${precioMayor}</p>
+<input type="number" min="0" value="0" id="cant-${nombre}">
+<button onclick="agregar('${nombre}',${precioUnidad},${precioMayor},${minMayor})">
+Agregar
+</button>
+`;
+
+contenedor.appendChild(card);
+
+});
 });
 
-function cargarProductos(){
-    let contenedor = document.getElementById("listaProductos");
-    contenedor.innerHTML = "";
+function agregar(nombre,precioU,precioM,minM){
 
-    productos.forEach((p,i)=>{
-        contenedor.innerHTML += `
-        <div class="producto">
-            <img src="${p.imagen}" onerror="this.src='https://via.placeholder.com/90'">
-            <div>
-                <h3>${p.nombre}</h3>
-                <p>Unidad: S/${p.unidad.toFixed(2)}</p>
-                <p>Desde ${p.minMayor} unidades: S/${p.mayor.toFixed(2)}</p>
-                Cantidad:
-                <input type="number" min="0" value="0" onchange="calcular()" id="prod${i}">
-            </div>
-        </div>
-        `;
-    });
+const cantidad = parseInt(document.getElementById("cant-"+nombre).value);
+if(cantidad<=0) return;
+
+let precioFinal = cantidad>=minM ? precioM : precioU;
+let subtotal = cantidad*precioFinal;
+
+carrito.push({nombre,cantidad,subtotal});
+total += subtotal;
+
+document.getElementById("total").innerText = total.toFixed(2);
 }
 
-function calcular(){
-    let total = 0;
+function enviarPedido(){
 
-    productos.forEach((p,i)=>{
-        let cantidad = parseInt(document.getElementById("prod"+i).value) || 0;
-        let precio = cantidad >= p.minMayor ? p.mayor : p.unidad;
-        total += cantidad * precio;
-    });
-
-    document.getElementById("total").innerText = total.toFixed(2);
+if(carrito.length===0){
+alert("No hay productos en el pedido");
+return;
 }
 
-function enviar(){
-    let nombre = document.getElementById("nombre").value.trim();
-    let telefono = document.getElementById("telefono").value.trim();
-    let total = document.getElementById("total").innerText;
+let mensaje="Hola, quiero pedir:%0A";
 
-    if(nombre === "" || telefono === ""){
-        alert("Ingresa nombre y teléfono");
-        return;
-    }
+carrito.forEach(p=>{
+mensaje += `- ${p.nombre} x${p.cantidad} = S/ ${p.subtotal}%0A`;
+});
 
-    let mensaje = "🛒 PEDIDO NUEVO%0A";
-    mensaje += "Cliente: " + nombre + "%0A";
-    mensaje += "Teléfono: " + telefono + "%0A%0A";
+mensaje += `%0ATotal: S/ ${total.toFixed(2)}`;
 
-    productos.forEach((p,i)=>{
-        let cantidad = parseInt(document.getElementById("prod"+i).value) || 0;
-
-        if(cantidad > 0){
-            let precio = cantidad >= p.minMayor ? p.mayor : p.unidad;
-            mensaje += p.nombre + " x" + cantidad + " = S/" + (cantidad*precio).toFixed(2) + "%0A";
-        }
-    });
-
-    mensaje += "%0ATotal: S/" + total;
-
-    let miNumero = "51992044102"; // CAMBIA ESTO SI QUIERES
-    window.open("https://wa.me/" + miNumero + "?text=" + mensaje);
+window.open(`https://wa.me/${whatsapp}?text=${mensaje}`);
 }
 
 </script>
