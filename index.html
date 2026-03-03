@@ -5,11 +5,14 @@
 <title>Sophie Store</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- Fuente profesional juvenil -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 
 body{
 margin:0;
-font-family:'Segoe UI',sans-serif;
+font-family:'Poppins',sans-serif;
 background:#f4f4f4;
 }
 
@@ -17,40 +20,44 @@ background:#f4f4f4;
 header{
 background:#6a0dad;
 color:white;
-padding:12px 20px;
 display:flex;
 align-items:center;
-justify-content:flex-start;
-gap:15px;
+justify-content:center;
+position:relative;
+padding:15px;
 }
 
 header img{
-width:50px;
-height:50px;
+position:absolute;
+left:15px;
+width:45px;
+height:45px;
 border-radius:50%;
 object-fit:cover;
 }
 
 header h1{
 margin:0;
-font-size:26px;
-letter-spacing:1px;
+font-size:28px;
 font-weight:700;
+letter-spacing:2px;
 }
 
-/* BUSCADOR */
+/* FILTROS */
 .filtros{
 background:white;
 padding:10px;
 display:flex;
 gap:10px;
 flex-wrap:wrap;
+justify-content:center;
 }
 
 input,select{
 padding:8px;
 border-radius:8px;
 border:1px solid #ccc;
+font-family:'Poppins';
 }
 
 /* PRODUCTOS */
@@ -92,7 +99,7 @@ color:gray;
 }
 
 .precio{
-font-weight:bold;
+font-weight:600;
 margin-top:5px;
 }
 
@@ -104,25 +111,34 @@ border:none;
 padding:8px;
 border-radius:8px;
 cursor:pointer;
+width:100%;
 }
 
 /* CELULAR */
 @media(max-width:600px){
+
 .producto{
 flex-direction:row;
 height:140px;
 }
+
 .producto img{
 width:40%;
 height:100%;
 }
+
 .info{
 width:60%;
 font-size:13px;
 }
+
+header h1{
+font-size:22px;
 }
 
-/* CARRITO */
+}
+
+/* BOTÓN CARRITO */
 .carrito-btn{
 position:fixed;
 bottom:20px;
@@ -132,11 +148,13 @@ color:white;
 border:none;
 padding:15px;
 border-radius:50%;
-font-size:20px;
+font-size:22px;
 cursor:pointer;
 box-shadow:0 4px 10px rgba(0,0,0,0.3);
+z-index:1000;
 }
 
+/* PANEL CARRITO */
 .carrito-panel{
 position:fixed;
 right:-100%;
@@ -149,10 +167,34 @@ box-shadow:-5px 0 15px rgba(0,0,0,0.2);
 transition:0.4s;
 padding:20px;
 overflow-y:auto;
+z-index:2000;
 }
 
 .carrito-panel.activo{
 right:0;
+}
+
+.carrito-panel h2{
+margin-top:0;
+}
+
+.item-carrito{
+border-bottom:1px solid #eee;
+padding:8px 0;
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:14px;
+}
+
+.eliminar{
+background:red;
+color:white;
+border:none;
+border-radius:5px;
+padding:4px 8px;
+cursor:pointer;
+font-size:12px;
 }
 
 .total{
@@ -167,6 +209,18 @@ color:white;
 padding:10px;
 border:none;
 border-radius:10px;
+margin-top:10px;
+cursor:pointer;
+width:100%;
+font-size:15px;
+}
+
+.btn-seguir{
+background:#6a0dad;
+color:white;
+padding:8px;
+border:none;
+border-radius:8px;
 margin-top:10px;
 cursor:pointer;
 width:100%;
@@ -190,7 +244,7 @@ width:100%;
 
 <div id="productos"></div>
 
-<button class="carrito-btn" onclick="abrirCarrito()">🛒</button>
+<button class="carrito-btn" onclick="toggleCarrito()">🛒</button>
 
 <div class="carrito-panel" id="carritoPanel">
 <h2>Tu Pedido</h2>
@@ -204,6 +258,8 @@ Total: S/. <span id="total">0.00</span>
 <input type="tel" id="celCliente" placeholder="Tu celular">
 
 <button class="btn-confirmar" onclick="confirmarPedido()">Confirmar Pedido</button>
+<button class="btn-seguir" onclick="toggleCarrito()">Seguir comprando</button>
+
 </div>
 
 <script>
@@ -243,6 +299,7 @@ document.getElementById("productos").innerHTML+=`
 <h3>${p.nombre}</h3>
 <div class="categoria">${p.categoria}</div>
 <div class="precio">Unidad: S/. ${p.precioUnidad.toFixed(2)}</div>
+<div class="precio">Mayor desde ${p.minMayor}: S/. ${p.precioMayor.toFixed(2)}</div>
 <input type="number" min="1" value="1" id="cant${index}">
 <button class="btn-agregar" onclick="agregarCarrito(${index})">Agregar al carrito</button>
 </div>
@@ -252,11 +309,11 @@ document.getElementById("productos").innerHTML+=`
 });
 
 function agregarCarrito(index){
+
 let cantidad=parseInt(document.getElementById("cant"+index).value);
 let p=productos[index];
 
 let precio=cantidad>=p.minMayor?p.precioMayor:p.precioUnidad;
-
 let subtotal=cantidad*precio;
 
 carrito.push({
@@ -266,22 +323,33 @@ subtotal:subtotal
 });
 
 actualizarCarrito();
+alert("Producto agregado al carrito");
 }
 
 function actualizarCarrito(){
+
 let lista="";
 let total=0;
 
 carrito.forEach((p,i)=>{
 total+=p.subtotal;
-lista+=`<p>${p.nombre} x${p.cantidad} - S/. ${p.subtotal.toFixed(2)}</p>`;
+lista+=`
+<div class="item-carrito">
+<span>${p.nombre} x${p.cantidad} - S/. ${p.subtotal.toFixed(2)}</span>
+<button class="eliminar" onclick="eliminarItem(${i})">X</button>
+</div>`;
 });
 
 document.getElementById("listaCarrito").innerHTML=lista;
 document.getElementById("total").innerText=total.toFixed(2);
 }
 
-function abrirCarrito(){
+function eliminarItem(i){
+carrito.splice(i,1);
+actualizarCarrito();
+}
+
+function toggleCarrito(){
 document.getElementById("carritoPanel").classList.toggle("activo");
 }
 
