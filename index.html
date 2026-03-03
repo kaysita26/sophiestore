@@ -82,24 +82,10 @@ flex-direction:column;
 gap:6px;
 }
 
-.codigo{
-font-size:12px;
-color:#888;
-}
-
-.nombre{
-font-weight:600;
-font-size:16px;
-}
-
-.categoria{
-font-size:12px;
-color:#555;
-}
-
-.precio{
-font-weight:600;
-}
+.codigo{font-size:12px;color:#888;}
+.nombre{font-weight:600;font-size:16px;}
+.categoria{font-size:12px;color:#555;}
+.precio{font-weight:600;}
 
 .tachado{
 text-decoration:line-through;
@@ -120,7 +106,7 @@ font-weight:600;
 
 .btn-add:hover{background:#333}
 
-/* CARRITO */
+/* BOTÓN CARRITO */
 .cart-btn{
 position:fixed;
 bottom:20px;
@@ -144,6 +130,7 @@ padding:4px 8px;
 font-size:12px;
 }
 
+/* CARRITO */
 .cart{
 position:fixed;
 top:0;
@@ -154,6 +141,7 @@ background:white;
 box-shadow:-4px 0 15px rgba(0,0,0,0.1);
 transition:0.3s;
 padding:20px;
+padding-bottom:120px; /* espacio para botón */
 display:flex;
 flex-direction:column;
 }
@@ -196,6 +184,10 @@ margin:15px 0;
 font-size:18px;
 }
 
+.checkout{
+margin-top:10px;
+}
+
 .checkout input{
 width:100%;
 padding:8px;
@@ -229,6 +221,7 @@ header h1{font-size:18px}
 }
 </style>
 </head>
+
 <body>
 
 <header>
@@ -260,7 +253,7 @@ header h1{font-size:18px}
 </div>
 
 <script>
-const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8uMFvOEq09EXVbg6YxPa1lhGndcrwD-ELRkxRQVsiG4Tjb646vPzGPcuHP4CD_EZ-F7da5BonXwt3/pub?gid=1913233787&single=true&output=csv";
+const CSV_URL="TU_LINK_DE_GOOGLE_SHEETS_AQUI";
 let productos=[];
 let carrito=JSON.parse(localStorage.getItem("carrito"))||[];
 
@@ -270,16 +263,17 @@ fetch(CSV_URL)
 let rows=data.split("\n").slice(1);
 rows.forEach(r=>{
 let c=r.split(",");
-if(c.length>5){
+if(c.length>=9){
 productos.push({
 codigo:c[0],
 nombre:c[1],
-categoria:c[2],
-precio:parseFloat(c[3]),
-precioMayor:parseFloat(c[4]),
-minMayor:parseInt(c[5]),
-descuento:parseFloat(c[6]||0),
-imagen:c[7]
+marca:c[2],
+categoria:c[3],
+precio:parseFloat(c[4])||0,
+precioMayor:parseFloat(c[5])||0,
+minMayor:parseInt(c[6])||0,
+descuento:parseFloat(c[7])||0,
+imagen:c[8]?.trim()
 });
 }
 });
@@ -315,7 +309,8 @@ function renderProductos(lista){
 let cont=document.getElementById("products");
 cont.innerHTML="";
 lista.forEach(p=>{
-let precioFinal=p.descuento? (p.precio*(1-p.descuento/100)):p.precio;
+let precioBase=p.precio;
+let precioFinal=p.descuento>0?precioBase*(1-p.descuento/100):precioBase;
 cont.innerHTML+=`
 <div class="card">
 <img src="${p.imagen}">
@@ -323,9 +318,9 @@ cont.innerHTML+=`
 <div class="codigo">Cod: ${p.codigo}</div>
 <div class="nombre">${p.nombre}</div>
 <div class="categoria">${p.categoria}</div>
-${p.descuento?`<div class="tachado">S/ ${p.precio.toFixed(2)}</div>`:""}
+${p.descuento>0?`<div class="tachado">S/ ${precioBase.toFixed(2)}</div>`:""}
 <div class="precio">S/ ${precioFinal.toFixed(2)}</div>
-<div style="font-size:12px">Mayor desde ${p.minMayor}: S/ ${p.precioMayor.toFixed(2)}</div>
+<div style="font-size:12px">Mayor desde ${p.minMayor} und: S/ ${p.precioMayor.toFixed(2)}</div>
 <button class="btn-add" onclick="agregar('${p.codigo}')">AGREGAR AL CARRITO</button>
 </div>
 </div>`;
@@ -355,18 +350,21 @@ let cont=document.getElementById("cartItems");
 cont.innerHTML="";
 let total=0;
 let count=0;
+
 carrito.forEach(i=>{
 let precio=i.cantidad>=i.minMayor?i.precioMayor:i.precio;
-if(i.descuento)precio=precio*(1-i.descuento/100);
+if(i.descuento>0)precio=precio*(1-i.descuento/100);
 let sub=precio*i.cantidad;
 total+=sub;
 count+=i.cantidad;
+
 cont.innerHTML+=`
 <div class="cart-item">
 ${i.nombre} x${i.cantidad}
 <button onclick="eliminar('${i.codigo}')">X</button>
 </div>`;
 });
+
 document.getElementById("total").innerText="Total: S/ "+total.toFixed(2);
 document.getElementById("cartCount").innerText=count;
 document.getElementById("confirmar").disabled=count==0;
@@ -380,14 +378,16 @@ function enviarPedido(){
 let nombre=document.getElementById("cliente").value.trim();
 let cel=document.getElementById("celular").value.trim();
 if(!nombre||!cel){alert("Completa nombre y celular");return;}
+
 let mensaje="Hola, quiero pedir:%0A";
 carrito.forEach(i=>{
 mensaje+=`- ${i.nombre} x${i.cantidad}%0A`;
 });
-mensaje+=`Total: ${document.getElementById("total").innerText}%0A`;
+mensaje+=`Total: S/ ${document.getElementById("total").innerText.replace("Total: ","")}%0A`;
 mensaje+=`Nombre: ${nombre}%0ACelular: ${cel}`;
+
 if(confirm("¿Confirmar pedido?")){
-window.open("https://wa.me/51999999999?text="+mensaje);
+window.open("https://wa.me/51992044102?text="+mensaje);
 carrito=[];
 guardar();
 toggleCart();
