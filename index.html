@@ -25,9 +25,7 @@ top:0;
 z-index:100;
 }
 
-header img{
-height:65px;
-}
+header img{ height:65px; }
 
 .titulo{
 flex:1;
@@ -77,9 +75,7 @@ position:relative;
 transition:0.2s;
 }
 
-.card:hover{
-transform:translateY(-3px);
-}
+.card:hover{ transform:translateY(-3px); }
 
 .card img{
 width:100%;
@@ -88,24 +84,13 @@ object-fit:cover;
 border-radius:10px;
 }
 
-.codigo{
-font-size:12px;
-color:#777;
-margin-top:6px;
-}
-
-.nombre{
-font-weight:bold;
-font-size:16px;
-margin:5px 0;
-}
+.codigo{ font-size:12px; color:#777; margin-top:6px; }
+.nombre{ font-weight:bold; font-size:16px; margin:5px 0; }
 
 .precio-original{
 text-decoration:line-through;
 color:#d32f2f;
-font-size:15px;
 font-weight:bold;
-margin-bottom:4px;
 }
 
 .precio-final{
@@ -156,28 +141,27 @@ border:1px solid #ccc;
 padding:5px;
 }
 
-/* CARRITO */
+/* CARRITO PROFESIONAL */
 .carrito{
 position:fixed;
 right:-100%;
 top:0;
 width:100%;
 max-width:420px;
-height:100%;
+height:100vh;
 background:white;
 box-shadow:-4px 0 15px rgba(0,0,0,0.2);
-padding:25px;
-overflow-y:auto;
+display:flex;
+flex-direction:column;
 transition:0.3s;
 }
 
-.carrito.activo{
-right:0;
-}
+.carrito.activo{ right:0; }
 
-.carrito h2{
-margin-top:20px;
-text-align:center;
+.lista-scroll{
+flex:1;
+overflow-y:auto;
+padding:0 20px;
 }
 
 .item{
@@ -190,7 +174,6 @@ padding:12px 0;
 
 .item-control{
 display:flex;
-align-items:center;
 gap:5px;
 }
 
@@ -204,17 +187,22 @@ border-radius:5px;
 cursor:pointer;
 }
 
+.footer-carrito{
+padding:15px 20px;
+border-top:1px solid #eee;
+background:white;
+}
+
 .total{
 font-weight:bold;
 font-size:18px;
-margin-top:20px;
 text-align:center;
 }
 
 .botones-carrito{
 display:flex;
 gap:10px;
-margin-top:15px;
+margin-top:10px;
 }
 
 .btn{
@@ -226,15 +214,8 @@ cursor:pointer;
 font-weight:bold;
 }
 
-.whatsapp{
-background:#25D366;
-color:white;
-}
-
-.cerrar{
-background:#333;
-color:white;
-}
+.whatsapp{ background:#25D366; color:white; }
+.cerrar{ background:#333; color:white; }
 
 .carrito-btn{
 position:fixed;
@@ -287,19 +268,21 @@ border-radius:50%;
 </div>
 
 <div class="carrito" id="carrito">
-<h2>Tu Carrito</h2>
-<div id="listaCarrito"></div>
-<div class="total" id="totalCarrito">Total: S/ 0.00</div>
+<h2 style="text-align:center;margin:20px 0;">Tu Carrito</h2>
 
+<div id="listaCarrito" class="lista-scroll"></div>
+
+<div class="footer-carrito">
+<div class="total" id="totalCarrito">Total: S/ 0.00</div>
 <div class="botones-carrito">
 <button class="btn whatsapp" id="btnEnviar" onclick="enviarWhatsApp()" disabled>Enviar pedido WhatsApp</button>
 <button class="btn cerrar" onclick="cerrarCarrito()">Seguir comprando</button>
 </div>
-
+</div>
 </div>
 
 <script>
-const URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ8uMFvOEq09EXVbg6YxPa1lhGndcrwD-ELRkxRQVsiG4Tjb646vPzGPcuHP4CD_EZ-F7da5BonXwt3/pub?gid=1913233787&single=true&output=csv";
+const URL="TU_URL_CSV_AQUI";
 let carrito={};
 let productos=[];
 
@@ -307,6 +290,7 @@ fetch(URL)
 .then(r=>r.text())
 .then(data=>{
 const filas=data.split("\n").slice(1);
+
 productos=filas.map(f=>{
 const c=f.split(",");
 return{
@@ -314,15 +298,50 @@ codigo:c[0],
 nombre:c[1],
 marca:c[2],
 categoria:c[3],
-precio:parseFloat(c[4]),
-precio_mayor:parseFloat(c[5]),
-min_mayor:parseInt(c[6]),
-descuento:parseFloat(c[7]),
+precio:parseFloat(c[4])||0,
+precio_mayor:parseFloat(c[5])||0,
+min_mayor:parseInt(c[6])||0,
+descuento:parseFloat(c[7])||0,
 imagen:c[8]
 }
 });
+
+cargarCategorias();
 mostrarProductos(productos);
 });
+
+function cargarCategorias(){
+const categorias=[...new Set(productos.map(p=>p.categoria))];
+const select=document.getElementById("filtroCategoria");
+categorias.forEach(cat=>{
+if(cat){
+let op=document.createElement("option");
+op.value=cat;
+op.textContent=cat;
+select.appendChild(op);
+}
+});
+}
+
+document.getElementById("buscar").addEventListener("input",filtrar);
+document.getElementById("filtroCategoria").addEventListener("change",filtrar);
+
+function filtrar(){
+const texto=document.getElementById("buscar").value.toLowerCase();
+const categoria=document.getElementById("filtroCategoria").value;
+
+const filtrados=productos.filter(p=>{
+return(
+(p.nombre.toLowerCase().includes(texto)||
+p.codigo.toLowerCase().includes(texto)||
+p.marca.toLowerCase().includes(texto))
+&&
+(categoria===""||p.categoria===categoria)
+);
+});
+
+mostrarProductos(filtrados);
+}
 
 function precioConDescuento(p){
 return p.descuento>0?p.precio-(p.precio*p.descuento/100):p.precio;
@@ -331,8 +350,10 @@ return p.descuento>0?p.precio-(p.precio*p.descuento/100):p.precio;
 function mostrarProductos(lista){
 const cont=document.getElementById("productos");
 cont.innerHTML="";
+
 lista.forEach(p=>{
 let precioBase=precioConDescuento(p);
+
 cont.innerHTML+=`
 <div class="card">
 ${p.descuento>0?`<div class="descuento">-${p.descuento}%</div>`:""}
@@ -348,7 +369,8 @@ ${p.descuento>0?`<div class="precio-original">S/ ${p.precio.toFixed(2)}</div>`:"
 <input type="number" min="0" value="${carrito[p.codigo]?carrito[p.codigo].cantidad:0}" onchange="manual('${p.codigo}',this.value)">
 <button onclick="cambiar('${p.codigo}',1)">+</button>
 </div>
-</div>`;
+</div>
+`;
 });
 }
 
@@ -358,7 +380,6 @@ if(!carrito[codigo]) carrito[codigo]={...p,cantidad:0};
 carrito[codigo].cantidad=parseInt(valor)||0;
 if(carrito[codigo].cantidad<=0) delete carrito[codigo];
 actualizarCarrito();
-mostrarProductos(productos);
 }
 
 function cambiar(codigo,v){
@@ -367,7 +388,6 @@ if(!carrito[codigo]) carrito[codigo]={...p,cantidad:0};
 carrito[codigo].cantidad+=v;
 if(carrito[codigo].cantidad<=0) delete carrito[codigo];
 actualizarCarrito();
-mostrarProductos(productos);
 }
 
 function actualizarCarrito(){
@@ -387,7 +407,6 @@ lista.innerHTML+=`
 <div class="item">
 <div>
 <strong>${p.nombre}</strong><br>
-${p.descuento>0?`<span style="color:#d32f2f;">Precio con descuento aplicado</span><br>`:""}
 Subtotal: S/ ${subtotal.toFixed(2)}
 </div>
 <div class="item-control">
@@ -395,17 +414,19 @@ Subtotal: S/ ${subtotal.toFixed(2)}
 <span>${p.cantidad}</span>
 <button onclick="cambiar('${p.codigo}',1)">+</button>
 </div>
-</div>`;
+</div>
+`;
 });
 
 document.getElementById("totalCarrito").innerText="Total: S/ "+total.toFixed(2);
 document.getElementById("contadorCarrito").innerText=contador;
-document.getElementById("btnEnviar").disabled= total<=0;
+document.getElementById("btnEnviar").disabled=total<=0;
 }
 
 function enviarWhatsApp(){
 let mensaje="Pedido:%0A";
 let total=0;
+
 Object.values(carrito).forEach(p=>{
 let precioBase=precioConDescuento(p);
 let precioFinal=p.cantidad>=p.min_mayor?p.precio_mayor:precioBase;
@@ -413,6 +434,7 @@ let subtotal=precioFinal*p.cantidad;
 total+=subtotal;
 mensaje+=`${p.nombre} (Cod:${p.codigo}) x ${p.cantidad} - S/ ${subtotal.toFixed(2)}%0A`;
 });
+
 mensaje+=`%0ATOTAL: S/ ${total.toFixed(2)}`;
 window.open("https://wa.me/51992044102?text="+mensaje);
 }
@@ -428,5 +450,3 @@ document.getElementById("carrito").classList.remove("activo");
 
 </body>
 </html>
-
-
