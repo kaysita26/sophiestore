@@ -14,8 +14,9 @@ body{background:#f4f6fb}
 /* HEADER */
 header{
 display:flex;
+flex-direction:column;
 align-items:center;
-justify-content:center;
+gap:10px;
 padding:15px;
 background:white;
 position:sticky;
@@ -27,6 +28,22 @@ box-shadow:0 2px 10px rgba(0,0,0,0.08);
 header h1{
 font-size:22px;
 font-weight:700;
+}
+
+/* BUSCADOR Y FILTRO */
+.controls{
+display:flex;
+gap:10px;
+width:100%;
+max-width:500px;
+}
+
+.controls input,
+.controls select{
+flex:1;
+padding:8px;
+border-radius:8px;
+border:1px solid #ddd;
 }
 
 /* PRODUCTOS */
@@ -44,6 +61,7 @@ box-shadow:0 4px 15px rgba(0,0,0,0.08);
 overflow:hidden;
 display:flex;
 flex-direction:column;
+position:relative;
 }
 
 .card img{
@@ -213,6 +231,7 @@ cursor:pointer;
 @media(max-width:768px){
 .products{grid-template-columns:1fr}
 .cart{width:100%}
+.controls{flex-direction:column}
 }
 </style>
 </head>
@@ -221,6 +240,14 @@ cursor:pointer;
 
 <header>
 <h1>SOPHIE STORE</h1>
+
+<div class="controls">
+<input type="text" id="searchInput" placeholder="Buscar producto..." oninput="renderProductos()">
+<select id="categoryFilter" onchange="renderProductos()">
+<option value="">Todas las categorías</option>
+</select>
+</div>
+
 </header>
 
 <div class="products" id="products"></div>
@@ -253,11 +280,13 @@ fetch(CSV_URL)
 let rows=data.trim().split("\n");
 rows.shift();
 
+let categoriasSet=new Set();
+
 rows.forEach(r=>{
 let c=r.split(",");
 if(c.length<9) return;
 
-productos.push({
+let prod={
 codigo:c[0].trim(),
 nombre:c[1].trim(),
 marca:c[2].trim(),
@@ -267,7 +296,15 @@ precioMayor:parseFloat(c[5])||0,
 minMayor:parseInt(c[6])||0,
 descuento:parseFloat(c[7])||0,
 imagen:c[8].trim()
+};
+
+productos.push(prod);
+categoriasSet.add(prod.categoria);
 });
+
+let select=document.getElementById("categoryFilter");
+categoriasSet.forEach(cat=>{
+select.innerHTML+=`<option value="${cat}">${cat}</option>`;
 });
 
 renderProductos();
@@ -277,7 +314,15 @@ function renderProductos(){
 let cont=document.getElementById("products");
 cont.innerHTML="";
 
-productos.forEach(p=>{
+let search=document.getElementById("searchInput").value.toLowerCase();
+let categoria=document.getElementById("categoryFilter").value;
+
+productos
+.filter(p=>
+(p.nombre.toLowerCase().includes(search)) &&
+(categoria==="" || p.categoria===categoria)
+)
+.forEach(p=>{
 
 if(!cantidadesTemp[p.codigo]) cantidadesTemp[p.codigo]=1;
 
@@ -288,12 +333,9 @@ cont.innerHTML+=`
 <div class="card">
 ${p.descuento>0?`<div class="badge">-${p.descuento}%</div>`:""}
 <img src="${p.imagen}" onerror="this.src='https://via.placeholder.com/300x170?text=Sin+Imagen'">
-
 <div class="card-body">
 <div class="nombre">${p.nombre}</div>
-
 ${p.descuento>0?`<div class="tachado">S/ ${p.precio.toFixed(2)}</div>`:""}
-
 <div class="precio-unidad">Unidad: S/ ${precioU.toFixed(2)}</div>
 <div class="precio-mayor">Mayor: S/ ${precioM.toFixed(2)}</div>
 <div class="minimo">Mínimo ${p.minMayor}</div>
@@ -304,9 +346,7 @@ ${p.descuento>0?`<div class="tachado">S/ ${p.precio.toFixed(2)}</div>`:""}
 <button onclick="cambiarTemp('${p.codigo}',1)">+</button>
 </div>
 
-<button class="btn-add" onclick="agregar('${p.codigo}')">
-AGREGAR
-</button>
+<button class="btn-add" onclick="agregar('${p.codigo}')">AGREGAR</button>
 </div>
 </div>`;
 });
@@ -360,13 +400,11 @@ count+=i.cantidad;
 cont.innerHTML+=`
 <div class="cart-item">
 <strong>${i.nombre}</strong>
-
 <div class="qty-controls">
 <button onclick="cambiarCantidad('${i.codigo}',-1)">-</button>
 <span>${i.cantidad}</span>
 <button onclick="cambiarCantidad('${i.codigo}',1)">+</button>
 </div>
-
 <div>Subtotal: S/ ${subtotal.toFixed(2)}</div>
 <button class="remove-btn" onclick="eliminar('${i.codigo}')">Eliminar</button>
 </div>`;
@@ -393,4 +431,3 @@ window.open("https://wa.me/51992044102?text="+mensaje);
 
 </body>
 </html>
-
