@@ -372,6 +372,7 @@ ${p.descuento>0?`<div class="descuento">-${p.descuento}%</div>`:""}
 <img src="${p.imagen}">
 <div class="codigo">Código: ${p.codigo}</div>
 <div class="nombre">${p.nombre}</div>
+<div class="marca">Marca: ${p.marca}</div>
 ${p.descuento>0?`<div class="precio-original">S/ ${p.precio.toFixed(2)}</div>`:""}
 <div class="precio-final">Unidad: S/ ${precioBase.toFixed(2)}</div>
 <div class="precio-mayor">Mayor desde ${p.min_mayor}: S/ ${p.precio_mayor.toFixed(2)}</div>
@@ -507,6 +508,7 @@ document.getElementById("carrito").classList.remove("activo");
 
 </body>
 </html>
+
 
 
 
