@@ -486,7 +486,16 @@ let url = "https://wa.me/51992044102?text=" + encodeURIComponent(mensaje);
 window.open(url, "_blank");
 
 }
+// 🔥 Reiniciar tienda después de enviar
+carrito = {};
+document.getElementById("clienteNombre").value = "";
+actualizarCarrito();
+cerrarCarrito();
 
+setTimeout(function(){
+  alert("🎉 Gracias por tu compra en SOPHIE STORE");
+}, 400);
+  
 function abrirCarrito(){
 document.getElementById("carrito").classList.add("activo");
 }
@@ -498,6 +507,7 @@ document.getElementById("carrito").classList.remove("activo");
 
 </body>
 </html>
+
 
 
 
