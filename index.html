@@ -452,23 +452,14 @@ input.value = carrito[codigo]?carrito[codigo].cantidad:0;
 function enviarWhatsApp(){
 
 let nombre=document.getElementById("clienteNombre").value.trim();
-let correo=document.getElementById("clienteCorreo").value.trim();
 
-if(nombre==="" || correo===""){
-alert("Por favor completa tu nombre y correo antes de enviar el pedido.");
-return;
-}
-
-let emailValido=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-if(!emailValido.test(correo)){
-alert("Ingresa un correo válido.");
+if(nombre==="" || telefono===""){
+alert("Por favor completa tu nombre, antes de enviar el pedido.");
 return;
 }
 
 let mensaje="🛍️ NUEVO PEDIDO SOPHIE STORE%0A%0A";
 mensaje+="👤 Cliente: "+nombre+"%0A";
-mensaje+="📧 Correo: "+correo+"%0A%0A";
 mensaje+="📦 Productos:%0A";
 
 let total=0;
@@ -498,6 +489,7 @@ document.getElementById("carrito").classList.remove("activo");
 
 </body>
 </html>
+
 
 
 
