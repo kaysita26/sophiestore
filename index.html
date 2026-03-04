@@ -58,4 +58,109 @@ let cart = JSON.parse(localStorage.getItem("cart")) || [];
 async function fetchProducts(){
   const res = await fetch(sheetURL);
   const data = await res.text();
-  const rows = data.split("\n").slice(1)
+  const rows = data.split("
+").slice(1);
+  products = rows.map(r => {
+    const [Codigo,Nombre,Marca,Categoria,PrecioUnidad,PrecioMayor,MinMayor,Descuento,Imagen] = r.split(",");
+    return {Codigo,Nombre,Marca,Categoria,PrecioUnidad:parseFloat(PrecioUnidad),PrecioMayor:parseFloat(PrecioMayor),MinMayor:parseInt(MinMayor),Descuento,Imagen};
+  });
+  renderProducts(products);
+  loadCategories();
+}
+
+function renderProducts(list){
+  const container = document.getElementById("products");
+  container.innerHTML = "";
+  list.forEach(p => {
+    container.innerHTML += `
+    <div class="bg-white p-4 rounded-2xl shadow hover:shadow-lg transition flex flex-col">
+      <img src="${p.Imagen}" class="h-48 object-cover rounded-xl mb-3">
+      <h3 class="font-semibold">${p.Nombre}</h3>
+      <p class="text-sm text-gray-500">Código: ${p.Codigo}</p>
+      <p class="text-sm">Marca: ${p.Marca}</p>
+      <p class="mt-2">Unidad: <b>S/ ${p.PrecioUnidad}</b></p>
+      <p class="text-sm text-gray-600">Mayor (${p.MinMayor}+): S/ ${p.PrecioMayor}</p>
+      <input type="number" min="1" value="1" id="qty-${p.Codigo}" class="border mt-2 px-2 py-1 rounded">
+      <button onclick="addToCart('${p.Codigo}')" class="mt-3 bg-black text-white py-2 rounded-lg">Agregar</button>
+    </div>`;
+  });
+}
+
+function loadCategories(){
+  const select = document.getElementById("categoryFilter");
+  const cats = [...new Set(products.map(p=>p.Categoria))];
+  cats.forEach(c=> select.innerHTML += `<option value="${c}">${c}</option>`);
+}
+
+function addToCart(code){
+  const product = products.find(p=>p.Codigo===code);
+  const qty = parseInt(document.getElementById("qty-"+code).value);
+  const price = qty >= product.MinMayor ? product.PrecioMayor : product.PrecioUnidad;
+  cart.push({...product, qty, price});
+  localStorage.setItem("cart",JSON.stringify(cart));
+  updateCart();
+}
+
+function updateCart(){
+  const items = document.getElementById("cart-items");
+  const totalEl = document.getElementById("cart-total");
+  const count = document.getElementById("cart-count");
+  items.innerHTML="";
+  let total=0;
+  cart.forEach((c,i)=>{
+    const sub = c.price * c.qty;
+    total+=sub;
+    items.innerHTML += `
+      <div class="mb-3 border-b pb-2">
+        <p class="font-semibold">${c.Nombre}</p>
+        <p>${c.qty} x S/ ${c.price}</p>
+        <p>Subtotal: S/ ${sub.toFixed(2)}</p>
+        <button onclick="removeItem(${i})" class="text-red-500 text-sm">Eliminar</button>
+      </div>`;
+  });
+  totalEl.innerText=total.toFixed(2);
+  count.innerText=cart.length;
+}
+
+function removeItem(i){
+  cart.splice(i,1);
+  localStorage.setItem("cart",JSON.stringify(cart));
+  updateCart();
+}
+
+function toggleCart(){
+  document.getElementById("cart").classList.toggle("translate-x-full");
+}
+
+function sendWhatsApp(){
+  let message="PEDIDO:%0A";
+  let total=0;
+  cart.forEach(c=>{
+    const sub=c.price*c.qty;
+    total+=sub;
+    message+=`${c.Nombre} (${c.Codigo}) - ${c.qty} x S/ ${c.price} = S/ ${sub}%0A`;
+  });
+  message+=`%0ASUBTOTAL: S/ ${total.toFixed(2)}`;
+  window.open(`https://wa.me/${whatsappNumber}?text=${message}`,'_blank');
+}
+
+// BUSCADOR
+document.getElementById("search").addEventListener("input", e=>{
+  const val=e.target.value.toLowerCase();
+  renderProducts(products.filter(p=>p.Nombre.toLowerCase().includes(val)));
+});
+
+// FILTRO
+
+document.getElementById("categoryFilter").addEventListener("change", e=>{
+  const val=e.target.value;
+  renderProducts(val?products.filter(p=>p.Categoria===val):products);
+});
+
+fetchProducts();
+updateCart();
+
+</script>
+
+</body>
+</html>
