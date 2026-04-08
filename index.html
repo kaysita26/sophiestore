@@ -66,16 +66,17 @@ margin:auto;
 }
 
 .card{
-background:white;
-border-radius:14px;
-padding:15px;
-box-shadow:0 6px 18px rgba(0,0,0,0.08);
-display:flex;
-flex-direction:column;
-align-items:center;
-text-align:center;
-position:relative;
-transition:0.2s;
+  background:white;
+  border-radius:14px;
+  padding:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  position:relative;
+  transition:0.2s;
+  height:100%; /* 🔥 IMPORTANTE */
 }
 
 .card:hover{ transform:translateY(-3px); }
@@ -121,10 +122,10 @@ border-radius:6px;
 }
 
 .contador{
-display:flex;
-align-items:center;
-gap:8px;
-margin-top:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:auto; /* 🔥 ESTO HACE LA MAGIA */
 }
 
 .contador button{
