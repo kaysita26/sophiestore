@@ -456,54 +456,54 @@ input.value = carrito[codigo]?carrito[codigo].cantidad:0;
 
 function enviarWhatsApp(){
 
-let nombre = document.getElementById("clienteNombre").value.trim();
+  let nombre = document.getElementById("clienteNombre").value.trim();
 
-if(nombre === ""){
-  alert("Por favor completa tu nombre antes de enviar el pedido.");
-  return;
+  if(nombre === ""){
+    alert("Por favor completa tu nombre antes de enviar el pedido.");
+    return;
+  }
+
+  if(Object.keys(carrito).length === 0){
+    alert("Tu carrito está vacío.");
+    return;
+  }
+
+  let mensaje = "🛍️ NUEVO PEDIDO SOPHIE STORE\n\n";
+  mensaje += "👤 Cliente: " + nombre + "\n\n";
+  mensaje += "📦 Productos:\n";
+
+  let total = 0;
+
+  Object.values(carrito).forEach(p => {
+    let precioBase = precioConDescuento(p);
+    let precioFinal = p.cantidad >= p.min_mayor ? p.precio_mayor : precioBase;
+    let subtotal = precioFinal * p.cantidad;
+
+    total += subtotal;
+    mensaje += `${p.nombre} (Cod:${p.codigo}) x ${p.cantidad} - S/ ${subtotal.toFixed(2)}\n`;
+  });
+
+  mensaje += `\n💰 TOTAL: S/ ${total.toFixed(2)}`;
+
+  let url = "https://wa.me/51992044102?text=" + encodeURIComponent(mensaje);
+
+  sessionStorage.setItem("pedidoEnviadoSophie", "1");
+  window.open(url, "_blank");
 }
 
-let mensaje = "🛍️ NUEVO PEDIDO SOPHIE STORE\n\n";
-mensaje += "👤 Cliente: " + nombre + "\n\n";
-mensaje += "📦 Productos:\n";
+window.addEventListener("focus", function(){
+  if(sessionStorage.getItem("pedidoEnviadoSophie") === "1"){
+    sessionStorage.removeItem("pedidoEnviadoSophie");
 
-let total = 0;
+    carrito = {};
+    document.getElementById("clienteNombre").value = "";
+    actualizarCarrito();
+    cerrarCarrito();
 
-Object.values(carrito).forEach(p => {
-
-  let precioBase = precioConDescuento(p);
-  let precioFinal = p.cantidad >= p.min_mayor ? p.precio_mayor : precioBase;
-  let subtotal = precioFinal * p.cantidad;
-
-  total += subtotal;
-
-  mensaje += `${p.nombre} (Cod:${p.codigo}) x ${p.cantidad} - S/ ${subtotal.toFixed(2)}\n`;
-
+    alert("🎉 Gracias por tu compra en SOPHIE STORE");
+    location.reload();
+  }
 });
-
-mensaje += `\n💰 TOTAL: S/ ${total.toFixed(2)}`;
-
-// 👉 ABRE WHATSAPP
-let url = "https://wa.me/51992044102?text=" + encodeURIComponent(mensaje);
-window.open(url, "_blank");
-
-
-// ✅ DESPUÉS DE ENVIAR → LIMPIAR TODO + MENSAJE + RECARGAR
-setTimeout(function(){
-
-  carrito = {};
-  document.getElementById("clienteNombre").value = "";
-  actualizarCarrito();
-  cerrarCarrito();
-
-  alert("🎉 Gracias por tu compra en SOPHIE STORE");
-
-  // 🔥 RECARGAR PÁGINA COMPLETA
-  location.reload();
-
-}, 500);
-
-}
   
 function abrirCarrito(){
 document.getElementById("carrito").classList.add("activo");
