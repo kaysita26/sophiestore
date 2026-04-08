@@ -471,31 +471,39 @@ let total = 0;
 
 Object.values(carrito).forEach(p => {
 
-let precioBase = precioConDescuento(p);
-let precioFinal = p.cantidad >= p.min_mayor ? p.precio_mayor : precioBase;
-let subtotal = precioFinal * p.cantidad;
+  let precioBase = precioConDescuento(p);
+  let precioFinal = p.cantidad >= p.min_mayor ? p.precio_mayor : precioBase;
+  let subtotal = precioFinal * p.cantidad;
 
-total += subtotal;
+  total += subtotal;
 
-mensaje += `${p.nombre} (Cod:${p.codigo}) x ${p.cantidad} - S/ ${subtotal.toFixed(2)}\n`;
+  mensaje += `${p.nombre} (Cod:${p.codigo}) x ${p.cantidad} - S/ ${subtotal.toFixed(2)}\n`;
 
 });
 
 mensaje += `\n💰 TOTAL: S/ ${total.toFixed(2)}`;
-// 🔥 Abrir WhatsApp SOLO UNA VEZ y al final
+
+// 👉 ABRE WHATSAPP
 let url = "https://wa.me/51992044102?text=" + encodeURIComponent(mensaje);
 window.open(url, "_blank");
 
-}
-// 🔥 Reiniciar tienda después de enviar
-carrito = {};
-document.getElementById("clienteNombre").value = "";
-actualizarCarrito();
-cerrarCarrito();
 
+// ✅ DESPUÉS DE ENVIAR → LIMPIAR TODO + MENSAJE + RECARGAR
 setTimeout(function(){
+
+  carrito = {};
+  document.getElementById("clienteNombre").value = "";
+  actualizarCarrito();
+  cerrarCarrito();
+
   alert("🎉 Gracias por tu compra en SOPHIE STORE");
-}, 400);
+
+  // 🔥 RECARGAR PÁGINA COMPLETA
+  location.reload();
+
+}, 500);
+
+}
   
 function abrirCarrito(){
 document.getElementById("carrito").classList.add("activo");
