@@ -251,6 +251,66 @@ font-size:12px;
 padding:4px 7px;
 border-radius:50%;
 }
+
+/* MODAL CONFIRMACION */
+.confirmacion-envio{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(0,0,0,0.45);
+z-index:9999;
+align-items:center;
+justify-content:center;
+padding:20px;
+}
+
+.confirmacion-box{
+background:white;
+width:100%;
+max-width:380px;
+border-radius:16px;
+box-shadow:0 12px 35px rgba(0,0,0,0.25);
+padding:22px;
+text-align:center;
+}
+
+.confirmacion-titulo{
+font-size:20px;
+font-weight:700;
+color:#111;
+margin-bottom:10px;
+}
+
+.confirmacion-texto{
+font-size:14px;
+color:#444;
+line-height:1.5;
+margin-bottom:18px;
+}
+
+.confirmacion-botones{
+display:flex;
+gap:10px;
+}
+
+.confirmacion-botones button{
+flex:1;
+padding:12px;
+border:none;
+border-radius:10px;
+font-weight:700;
+cursor:pointer;
+}
+
+.btn-no{
+background:#333;
+color:white;
+}
+
+.btn-si{
+background:#25D366;
+color:white;
+}
 </style>
 </head>
 <body>
@@ -292,6 +352,19 @@ border-radius:50%;
 <button class="btn cerrar" onclick="cerrarCarrito()">Seguir comprando</button>
 </div>
 </div>
+</div>
+
+<div id="confirmacionEnvio" class="confirmacion-envio">
+  <div class="confirmacion-box">
+    <div class="confirmacion-titulo">Confirmar envío</div>
+    <div class="confirmacion-texto">
+      ¿Confirmas que enviaste tu pedido por WhatsApp?
+    </div>
+    <div class="confirmacion-botones">
+      <button type="button" class="btn-no" onclick="cancelarConfirmacionEnvio()">Aún no</button>
+      <button type="button" class="btn-si" onclick="confirmarEnvioWhatsApp()">Sí, envié</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -504,18 +577,35 @@ let url = "https://wa.me/51992044102?text=" + encodeURIComponent(mensaje);
 envioEnProceso = true;
 document.getElementById("btnEnviar").disabled = true;
 
+sessionStorage.setItem("pendienteConfirmarEnvioSophie", "1");
 window.open(url, "_blank");
+}
 
-setTimeout(()=>{
-const confirmado = confirm("¿Confirmas que enviaste el pedido por WhatsApp?");
+function mostrarConfirmacionEnvio(){
+const modal = document.getElementById("confirmacionEnvio");
+if(modal){
+modal.style.display = "flex";
+}
+}
 
-if(confirmado){
+function ocultarConfirmacionEnvio(){
+const modal = document.getElementById("confirmacionEnvio");
+if(modal){
+modal.style.display = "none";
+}
+}
+
+function confirmarEnvioWhatsApp(){
+sessionStorage.removeItem("pendienteConfirmarEnvioSophie");
+ocultarConfirmacionEnvio();
 limpiarPedido();
-}else{
+}
+
+function cancelarConfirmacionEnvio(){
+sessionStorage.removeItem("pendienteConfirmarEnvioSophie");
+ocultarConfirmacionEnvio();
 envioEnProceso = false;
 document.getElementById("btnEnviar").disabled = false;
-}
-}, 1800);
 }
 
 function abrirCarrito(){
@@ -525,24 +615,13 @@ document.getElementById("carrito").classList.add("activo");
 function cerrarCarrito(){
 document.getElementById("carrito").classList.remove("activo");
 }
+
+window.addEventListener("focus", function(){
+if(sessionStorage.getItem("pendienteConfirmarEnvioSophie") === "1"){
+mostrarConfirmacionEnvio();
+}
+});
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
