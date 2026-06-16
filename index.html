@@ -432,10 +432,12 @@ precio:parseFloat(c[4])||0,
 precio_mayor:parseFloat(c[5])||0,
 min_mayor:parseInt(c[6])||0,
 descuento:parseFloat(c[7])||0,
-imagen:c[8]
+imagen:c[8],
+estado:c[13]
 };
-});
-
+}).filter(p =>
+String(p.estado).trim().toLowerCase() === "activo"
+);
 cargarCategorias();
 mostrarProductos(productos);
 })
